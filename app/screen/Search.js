@@ -7,30 +7,21 @@ import {
   Dimensions,
   Keyboard,
   PanResponder,
+  ScrollView,
   StyleSheet,
   Switch,
   Text,
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  View
+  View,
 } from "react-native";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import BottomTabBar from "../../components/BottomTabBar"; // ⭐ 추가
+import BottomTabBar from "../../components/BottomTabBar";
+import regions from "../data/regions.json"; // ⭐ 전국 지역 데이터 불러오기
 
 const { width } = Dimensions.get("window");
-
-const REGION_DATA = {
-  서울특별시: {
-    강남구: ["삼성동", "역삼동", "청담동"],
-    서초구: ["서초동", "방배동"],
-  },
-  경기도: {
-    수원시: ["영통구", "팔달구"],
-    성남시: ["분당구", "수정구", "중원구"],
-  },
-};
 
 export default function Search() {
   const router = useRouter();
@@ -104,11 +95,12 @@ export default function Search() {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalType, setModalType] = useState(null);
 
-  const sidoList = Object.keys(REGION_DATA);
-  const gugunList = selectedSido ? Object.keys(REGION_DATA[selectedSido]) : [];
+  // ⭐ 전국 데이터 적용된 리스트들
+  const sidoList = Object.keys(regions);
+  const gugunList = selectedSido ? Object.keys(regions[selectedSido]) : [];
   const dongList =
     selectedSido && selectedGugun
-      ? REGION_DATA[selectedSido][selectedGugun]
+      ? regions[selectedSido][selectedGugun]
       : [];
 
   let modalItems = [];
@@ -133,7 +125,6 @@ export default function Search() {
     setModalVisible(true);
   };
 
-  // 🔵 최근 검색어 불러오기
   const loadRecentKeywords = async () => {
     try {
       const stored = await AsyncStorage.getItem("recentKeywords");
@@ -149,7 +140,6 @@ export default function Search() {
     loadRecentKeywords();
   }, []);
 
-  // 🔵 최근 검색어 저장
   const saveRecentKeywords = async (list) => {
     try {
       await AsyncStorage.setItem("recentKeywords", JSON.stringify(list));
@@ -158,7 +148,6 @@ export default function Search() {
     }
   };
 
-  // ⭐ 검색 실행
   const submitSearch = () => {
     if (!searchText.trim()) return;
 
@@ -202,9 +191,16 @@ export default function Search() {
           </View>
         </TouchableOpacity>
 
-        {/* === 기존 필터 UI 모두 동일 === */}
+        {/* === 기존 UI 그대로 === */}
 
-        <View style={styles.filterBox}>
+        <View
+  style={[
+    styles.filterBox,
+    selectedLocation === "nearby"
+      ? { paddingBottom: 230 }
+      : { paddingBottom: 140 }
+  ]}
+>
           <Text style={styles.filterTitle}>맞춤형 필터</Text>
 
           <Text style={styles.subTitle}>요양시설 종류</Text>
@@ -388,6 +384,48 @@ export default function Search() {
 
         <View style={styles.bottomWhiteFix} />
 
+        {/* 🔵 지역 모달 */}
+        {modalVisible && (
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalBox}>
+  <Text style={styles.modalTitle}>{modalTitle}</Text>
+
+  {/* 🔥 리스트 영역만 스크롤되게 */}
+  <ScrollView style={{ maxHeight: 300 }}>
+    {modalItems.map((item) => (
+      <TouchableOpacity
+        key={item}
+        style={styles.modalItem}
+        onPress={() => {
+          if (modalType === "sido") {
+            setSelectedSido(item);
+            setSelectedGugun(null);
+            setSelectedDong(null);
+          } else if (modalType === "gugun") {
+            setSelectedGugun(item);
+            setSelectedDong(null);
+          } else if (modalType === "dong") {
+            setSelectedDong(item);
+          }
+          setModalVisible(false);
+        }}
+      >
+        <Text style={styles.modalItemText}>{item}</Text>
+      </TouchableOpacity>
+    ))}
+  </ScrollView>
+
+  <TouchableOpacity
+    onPress={() => setModalVisible(false)}
+    style={styles.modalClose}
+  >
+    <Text style={styles.modalCloseText}>닫기</Text>
+  </TouchableOpacity>
+</View>
+
+          </View>
+        )}
+
         {/* 🔵 검색 팝업 */}
         {searchPopupVisible && (
           <>
@@ -454,11 +492,7 @@ export default function Search() {
           </>
         )}
 
-        {/* 🔵 하단바 (이미지 제거 → 커스텀 BottomTabBar 적용) */}
-        {!searchPopupVisible && (
-          <BottomTabBar activeKey="search" />
-        )}
-
+        {!searchPopupVisible && <BottomTabBar activeKey="search" />}
       </View>
     </TouchableWithoutFeedback>
   );
@@ -466,7 +500,7 @@ export default function Search() {
 
 const styles = StyleSheet.create({
 
-  /* ---- 네가 준 스타일 그대로 (하단바 외 절대 수정 없음) ---- */
+  /* ---- 기존 스타일 그대로 (수정 X) ---- */
 
   container: {
     flex: 1,
@@ -508,10 +542,9 @@ const styles = StyleSheet.create({
 
   filterBox: {
     backgroundColor: "#F7F9FB",
-    marginTop: 25,
+    marginTop: 23,
     paddingHorizontal: 20,
     paddingVertical: 25,
-    paddingBottom: 140,
     flexGrow: 1,
   },
 
@@ -526,12 +559,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#162B40",
     marginTop: 25,
-    marginBottom: 10,
+    marginBottom: 8,
   },
 
   row: {
     flexDirection: "row",
-    marginBottom: 10,
+    marginBottom: 8,
   },
 
   typeButton: {
@@ -556,7 +589,7 @@ const styles = StyleSheet.create({
   },
 
   radioGroup: {
-    marginTop: 5,
+    marginTop: 3,
   },
 
   radioItem: {
@@ -585,7 +618,7 @@ const styles = StyleSheet.create({
   },
 
   nearbyArea: {
-    marginTop: 10,
+    marginTop: 8,
   },
 
   nearbyLabelRow: {
@@ -606,14 +639,14 @@ const styles = StyleSheet.create({
   nearbySliderContainer: {
     height: 40,
     position: "relative",
-    marginTop: 5,
+    marginTop: 3,
   },
 
   nearbyBar: {
     height: 5,
     backgroundColor: "#DCE8F2",
     borderRadius: 3,
-    marginTop: 10,
+    marginTop: 8,
   },
 
   nearbyHandle: {
@@ -628,7 +661,7 @@ const styles = StyleSheet.create({
   regionRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 15,
+    marginTop: 13,
   },
 
   regionBox: {
@@ -681,7 +714,7 @@ const styles = StyleSheet.create({
     height: 5,
     backgroundColor: "#DCE8F2",
     borderRadius: 3,
-    marginTop: 10,
+    marginTop: 8,
   },
 
   priceHandle: {
@@ -696,14 +729,14 @@ const styles = StyleSheet.create({
   priceValue: {
     fontSize: 16,
     color: "#162B40",
-    marginTop: 5,
+    marginTop: 3,
   },
 
   switchRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 25,
+    marginTop: 23,
   },
 
   switchLabel: {
@@ -713,7 +746,7 @@ const styles = StyleSheet.create({
   },
 
   applyButton: {
-    marginTop: 25,
+    marginTop: 23,
     height: 55,
     borderRadius: 12,
     backgroundColor: "#5DA7DB",
@@ -768,7 +801,7 @@ const styles = StyleSheet.create({
   },
 
   popupGrayArea: {
-    marginTop: 25,
+    marginTop: 23,
     backgroundColor: "#F7F9FB",
     paddingHorizontal: 20,
     paddingTop: 20,
@@ -779,8 +812,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 15,
-    marginTop: 5,
+    marginBottom: 13,
+    marginTop: 3,
   },
 
   recentTitle: {
@@ -812,7 +845,7 @@ const styles = StyleSheet.create({
   },
 
   closePopup: {
-    marginTop: 20,
+    marginTop: 18,
     alignSelf: "flex-end",
   },
 
@@ -820,6 +853,58 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#5DA7DB",
   },
+
+  modalOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "rgba(0,0,0,0.3)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 2000,
+  },
+  
+  modalBox: {
+    width: "75%",
+    maxHeight: "60%",
+    backgroundColor: "white",
+    borderRadius: 12,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    overflow: "hidden", 
+  },
+  
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#162B40",
+    marginBottom: 10,
+  },
+  
+  modalItem: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E4E9EE",
+  },
+  
+  modalItemText: {
+    fontSize: 17,
+    color: "#162B40",
+  },
+  
+  modalClose: {
+    marginTop: 13,
+    alignSelf: "flex-end",
+  },
+  
+  modalCloseText: {
+    fontSize: 16,
+    color: "#5DA7DB",
+    fontWeight: "600",
+  },
+  
 });
 
 // === 전체 Search.js 코드 끝 ===
