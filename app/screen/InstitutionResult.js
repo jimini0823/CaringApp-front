@@ -22,7 +22,6 @@ export default function InstitutionResult() {
   const [searchText, setSearchText] = useState(keyword || "");
   const [results, setResults] = useState([]);
 
-  // 🔥 API 호출 제거 → 대신 기본 빈 리스트로 처리
   useEffect(() => {
     setResults([]);
   }, [keyword]);
@@ -60,7 +59,7 @@ export default function InstitutionResult() {
       <View style={styles.grayBackground} />
 
       <ScrollView style={styles.resultScroll} showsVerticalScrollIndicator={false}>
-        {/* 🔥 API 연결 전이므로 안내 문구 출력 */}
+        {/* API 연결 전이므로 안내 문구 출력 */}
         {results.length === 0 && (
           <View style={{ marginTop: 50, alignItems: "center" }}>
             <Text style={{ color: "#6B7B8C", fontSize: 16 }}>

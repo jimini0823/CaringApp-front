@@ -1,5 +1,3 @@
-// === 전체 Search.js 코드 시작 ===
-
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -927,5 +925,3 @@ const styles = StyleSheet.create({
   },
   
 });
-
-// === 전체 Search.js 코드 끝 ===

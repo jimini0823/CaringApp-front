@@ -11,7 +11,7 @@ import {
     View,
 } from "react-native";
 
-import BottomTabBar from "../../components/BottomTabBar"; // 🔥 하단바 추가
+import BottomTabBar from "../../components/BottomTabBar";
 
 const { width } = Dimensions.get("window");
 
@@ -19,73 +19,74 @@ export default function Institution() {
   const router = useRouter();
   const { id, keyword } = useLocalSearchParams();
 
-  const [data, setData] = useState(null);
+  const [institution, setInstitution] = useState(null);
+  const [caregivers, setCaregivers] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const mock = {
-        id,
-        name: "사랑재 요양원",
-        type: "요양원",
-        address: "서울시 광진구 자양로188",
-        available: true,
-        imageUrl:
-          "https://cdn.pixabay.com/photo/2020/01/28/12/38/building-4803763_1280.jpg",
-        tags: ["치매", "청결"],
-        description:
-          "사랑재 요양원은 어르신들의 편안한 생활을 위해 최적의 케어 환경을 제공합니다.",
-        staff: [
-          {
-            id: 1,
-            name: "김미정",
-            career: "경력 10년",
-            license: "자격증 보유",
-            image:
-              "https://cdn.pixabay.com/photo/2021/08/01/19/16/woman-6512419_1280.jpg",
-          },
-          {
-            id: 2,
-            name: "박지은",
-            career: "경력 7년",
-            license: "자격증 보유",
-            image:
-              "https://cdn.pixabay.com/photo/2019/11/29/02/02/architecture-1867426_1280.jpg",
-          },
-        ],
-        reviews: [
-          {
-            id: 1,
-            name: "이**",
-            rating: 4,
-            content: "친절하고 좋아요!",
-            tags: ["청결함", "서비스", "친절"],
-          },
-          {
-            id: 2,
-            name: "윤**",
-            rating: 5,
-            content: "세심히 케어해주고 좋습니다.",
-            tags: ["청결함", "시설"],
-          },
-          {
-            id: 3,
-            name: "박**",
-            rating: 3,
-            content: "어머니가 좋아하세요.",
-            tags: ["청결", "친절"],
-          },
-        ],
-      };
-
-      setData(mock);
+    const mockInstitution = {
+      name: "사랑재 요양원",
+      institutionType: "NURSING_HOME",
+      isAdmissionAvailable: true,
+      address: {
+        city: "서울시 광진구",
+        street: "자양로188",
+      },
+      specializedConditions: ["치매", "청결"], 
+      priceInfo: {
+        monthlyBaseFee: 1200000,
+      },
     };
-    fetchData();
+
+    const mockCaregivers = [
+      {
+        id: 1,
+        name: "김미정",
+        experienceDetails: "경력 10년",
+        photoUrl:
+          "https://cdn.pixabay.com/photo/2021/08/01/19/16/woman-6512419_1280.jpg",
+      },
+      {
+        id: 2,
+        name: "박지은",
+        experienceDetails: "경력 7년",
+        photoUrl:
+          "https://cdn.pixabay.com/photo/2019/11/29/02/02/architecture-1867426_1280.jpg",
+      },
+    ];
+    const mockReviews = [
+      {
+        id: 1,
+        member: { name: "이**" },
+        rating: 4,
+        content: "친절하고 좋아요!",
+        tags: [
+          { id: 1, name: "청결함" },
+          { id: 2, name: "서비스" },
+          { id: 3, name: "친절" },
+        ],
+      },
+      {
+        id: 2,
+        member: { name: "윤**" },
+        rating: 5,
+        content: "세심히 케어해주고 좋습니다.",
+        tags: [
+          { id: 1, name: "청결함" },
+          { id: 2, name: "시설" },
+        ],
+      },
+    ];
+
+    setInstitution(mockInstitution);
+    setCaregivers(mockCaregivers);
+    setReviews(mockReviews);
   }, [id]);
 
-  if (!data) return null;
+  if (!institution) return null;
 
-  const visibleReviews = expanded ? data.reviews : data.reviews.slice(0, 2);
+  const visibleReviews = expanded ? reviews : reviews.slice(0, 2);
 
   return (
     <View style={styles.container}>
@@ -99,35 +100,57 @@ export default function Institution() {
       </TouchableOpacity>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        <Image source={{ uri: data.imageUrl }} style={styles.topImage} />
+        <Image
+          source={{
+            uri:
+              "https://cdn.pixabay.com/photo/2020/01/28/12/38/building-4803763_1280.jpg",
+          }}
+          style={styles.topImage}
+        />
 
         <View style={styles.contentBox}>
-          <Text style={styles.typeText}>{data.type}</Text>
-          <Text style={styles.nameText}>{data.name}</Text>
+          {/* 기관 타입 */}
+          <Text style={styles.typeText}>
+            {institution.institutionType === "NURSING_HOME"
+              ? "요양원"
+              : institution.institutionType === "DAY_CARE_CENTER"
+              ? "데이케어센터"
+              : institution.institutionType === "HOME_CARE_SERVICE"
+              ? "재가 돌봄"
+              : "기관"}
+          </Text>
 
+          {/* 기관명 */}
+          <Text style={styles.nameText}>{institution.name}</Text>
+
+          {/* 주소 */}
           <View style={styles.row}>
             <Ionicons name="location-outline" size={18} color="#5DA7DB" />
-            <Text style={styles.addressText}>{data.address}</Text>
+            <Text style={styles.addressText}>
+              {institution.address.city} {institution.address.street}
+            </Text>
           </View>
 
+          {/* 입소 가능 */}
           <View style={styles.row}>
             <Ionicons
               name="home-outline"
               size={18}
-              color={data.available ? "#5DA7DB" : "#A0A9B2"}
+              color={institution.isAdmissionAvailable ? "#5DA7DB" : "#A0A9B2"}
             />
             <Text
               style={[
                 styles.availableText,
-                !data.available && { color: "#A0A9B2" },
+                !institution.isAdmissionAvailable && { color: "#A0A9B2" },
               ]}
             >
-              {data.available ? "입소 가능" : "입소 불가능"}
+              {institution.isAdmissionAvailable ? "입소 가능" : "입소 불가능"}
             </Text>
           </View>
 
+          {/* 태그 */}
           <View style={styles.tagRow}>
-            {data.tags.map((t) => (
+            {institution.specializedConditions.map((t) => (
               <View key={t} style={styles.tagBox}>
                 <Text style={styles.tagText}>{t}</Text>
               </View>
@@ -135,81 +158,71 @@ export default function Institution() {
           </View>
 
           <View style={styles.sectionCard}>
-            <Text style={styles.descriptionText}>{data.description}</Text>
+            <Text style={styles.descriptionText}>
+              기관 설명이 여기에 들어갑니다. (백엔드에서 description 필드 추가 필요)
+            </Text>
           </View>
 
+          {/* 직원 정보 */}
           <Text style={styles.sectionTitle}>직원 정보</Text>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={{ marginTop: 10 }}
-          >
-            {data.staff.map((s) => (
-              <View key={s.id} style={styles.staffCard}>
-                <Image source={{ uri: s.image }} style={styles.staffImage} />
-                <Text style={styles.staffName}>{s.name}</Text>
-                <Text style={styles.staffDetail}>{s.career}</Text>
-                <Text style={styles.staffDetail}>{s.license}</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {caregivers.map((c) => (
+              <View key={c.id} style={styles.staffCard}>
+                <Image source={{ uri: c.photoUrl }} style={styles.staffImage} />
+                <Text style={styles.staffName}>{c.name}</Text>
+                <Text style={styles.staffDetail}>{c.experienceDetails}</Text>
+                <Text style={styles.staffDetail}>자격증 보유</Text>
               </View>
             ))}
           </ScrollView>
 
-          <View style={{ marginTop: 25 }}>
-            <Text style={styles.sectionTitle}>
-              모든 리뷰 ({data.reviews.length}개)
-            </Text>
+          {/* 리뷰 */}
+          <Text style={styles.sectionTitle}>
+            모든 리뷰 ({reviews.length}개)
+          </Text>
 
-            {visibleReviews.map((r) => (
-              <View key={r.id} style={styles.reviewCard}>
-                <View style={styles.reviewHeader}>
-                  <Text style={styles.reviewName}>{r.name}</Text>
+          {visibleReviews.map((r) => (
+            <View key={r.id} style={styles.reviewCard}>
+              <View style={styles.reviewHeader}>
+                <Text style={styles.reviewName}>{r.member.name}</Text>
 
-                  <View style={{ flexDirection: "row", marginLeft: 6 }}>
-                    {Array.from({ length: r.rating }).map((_, i) => (
-                      <Ionicons
-                        key={`filled-${i}`}
-                        name="star"
-                        size={16}
-                        color="#FFD700"
-                        style={{ marginLeft: 2 }}
-                      />
-                    ))}
-
-                    {Array.from({ length: 5 - r.rating }).map((_, i) => (
-                      <Ionicons
-                        key={`empty-${i}`}
-                        name="star-outline"
-                        size={16}
-                        color="#C4C4C4"
-                        style={{ marginLeft: 2 }}
-                      />
-                    ))}
-                  </View>
-                </View>
-
-                <Text style={styles.reviewContent}>{r.content}</Text>
-
-                <View style={styles.reviewTagRow}>
-                  {r.tags.map((t) => (
-                    <View key={t} style={styles.reviewTagBox}>
-                      <Text style={styles.reviewTagText}>{t}</Text>
-                    </View>
+                <View style={{ flexDirection: "row", marginLeft: 6 }}>
+                  {Array.from({ length: r.rating }).map((_, i) => (
+                    <Ionicons
+                      key={`filled-${i}`}
+                      name="star"
+                      size={16}
+                      color="#FFD700"
+                      style={{ marginLeft: 2 }}
+                    />
                   ))}
                 </View>
               </View>
-            ))}
 
-            {!expanded && (
-              <TouchableOpacity
-                style={styles.moreBtn}
-                onPress={() => setExpanded(true)}
-              >
-                <Text style={styles.moreBtnText}>모두보기</Text>
-              </TouchableOpacity>
-            )}
-          </View>
+              <Text style={styles.reviewContent}>{r.content}</Text>
 
+              <View style={styles.reviewTagRow}>
+                {r.tags.map((t) => (
+                  <View key={t.id} style={styles.reviewTagBox}>
+                    <Text style={styles.reviewTagText}>{t.name}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          ))}
+
+          {/* 모두보기 */}
+          {!expanded && (
+            <TouchableOpacity
+              style={styles.moreBtn}
+              onPress={() => setExpanded(true)}
+            >
+              <Text style={styles.moreBtnText}>모두보기</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* 상담/예약 */}
           <View style={styles.actionRow}>
             <TouchableOpacity
               style={styles.actionLeft}
@@ -221,8 +234,12 @@ export default function Institution() {
             <TouchableOpacity
               style={styles.actionRight}
               onPress={() =>
-                router.push(`/screen/CounselChat?name=${encodeURIComponent(data.name)}`)}
-              
+                router.push(
+                  `/screen/CounselChat?name=${encodeURIComponent(
+                    institution.name
+                  )}`
+                )
+              }
             >
               <Text style={styles.actionRightText}>예약하기</Text>
             </TouchableOpacity>
@@ -232,7 +249,6 @@ export default function Institution() {
         </View>
       </ScrollView>
 
-      {/* 🔥🔥🔥 기존 이미지 삭제 → 커스텀 하단바 삽입*/}
       <BottomTabBar activeKey="search" />
     </View>
   );
@@ -368,7 +384,6 @@ const styles = StyleSheet.create({
 
   reviewHeader: {
     flexDirection: "row",
-    justifyContent: "flex-start",
     alignItems: "center",
   },
 
@@ -376,7 +391,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#162B40",
-    marginRight: 5,
   },
 
   reviewContent: {
@@ -457,4 +471,3 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
 });
-
