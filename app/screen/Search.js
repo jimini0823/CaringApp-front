@@ -19,13 +19,14 @@ import {
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import BottomTabBar from "../../components/BottomTabBar";
-import regions from "../data/regions.json"; // ⭐ 전국 지역 데이터 불러오기
+import regions from "../data/regions.json";
 
 const { width } = Dimensions.get("window");
 
 export default function Search() {
   const router = useRouter();
 
+  // 상태값들
   const [selectedType, setSelectedType] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [isAvailable, setIsAvailable] = useState(false);
@@ -51,7 +52,6 @@ export default function Search() {
       },
       onPanResponderMove: (_, gesture) => {
         let newX = priceDragStartX.current + gesture.dx;
-
         if (newX < 0) newX = 0;
         if (newX > SLIDER_WIDTH - HANDLE_RADIUS * 2)
           newX = SLIDER_WIDTH - HANDLE_RADIUS * 2;
@@ -76,7 +76,6 @@ export default function Search() {
       },
       onPanResponderMove: (_, gesture) => {
         let newX = nearbyDragStartX.current + gesture.dx;
-
         if (newX < 0) newX = 0;
         if (newX > SLIDER_WIDTH - HANDLE_RADIUS * 2)
           newX = SLIDER_WIDTH - HANDLE_RADIUS * 2;
@@ -95,13 +94,11 @@ export default function Search() {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalType, setModalType] = useState(null);
 
-  // ⭐ 전국 데이터 적용된 리스트들
+  // 지역 데이터
   const sidoList = Object.keys(regions);
   const gugunList = selectedSido ? Object.keys(regions[selectedSido]) : [];
   const dongList =
-    selectedSido && selectedGugun
-      ? regions[selectedSido][selectedGugun]
-      : [];
+    selectedSido && selectedGugun ? regions[selectedSido][selectedGugun] : [];
 
   let modalItems = [];
   let modalTitle = "";
@@ -150,7 +147,6 @@ export default function Search() {
 
   const submitSearch = () => {
     if (!searchText.trim()) return;
-
     const keyword = searchText.trim();
 
     const updated = [
@@ -175,6 +171,7 @@ export default function Search() {
       <View style={styles.container}>
         <Text style={styles.title}>기관 검색</Text>
 
+        {/* 검색창 터치 */}
         <TouchableOpacity
           onPress={() => setSearchPopupVisible(true)}
           activeOpacity={1}
@@ -191,20 +188,19 @@ export default function Search() {
           </View>
         </TouchableOpacity>
 
-        {/* === 기존 UI 그대로 === */}
-
+        {/* 필터 박스 */}
         <View
-  style={[
-    styles.filterBox,
-    selectedLocation === "nearby"
-      ? { paddingBottom: 230 }
-      : { paddingBottom: 140 }
-  ]}
->
+          style={[
+            styles.filterBox,
+            selectedLocation === "nearby"
+              ? { paddingBottom: 230 }
+              : { paddingBottom: 140 },
+          ]}
+        >
           <Text style={styles.filterTitle}>맞춤형 필터</Text>
 
+          {/* 유형 */}
           <Text style={styles.subTitle}>요양시설 종류</Text>
-
           <View style={styles.row}>
             {["데이케어센터", "요양원", "재가 돌봄 서비스"].map((item) => (
               <TouchableOpacity
@@ -227,6 +223,7 @@ export default function Search() {
             ))}
           </View>
 
+          {/* 위치 라디오 */}
           <Text style={styles.subTitle}>위치</Text>
 
           <View style={styles.radioGroup}>
@@ -257,6 +254,7 @@ export default function Search() {
             </TouchableOpacity>
           </View>
 
+          {/* 내 주변 */}
           {selectedLocation === "nearby" && (
             <View style={styles.nearbyArea}>
               <View style={styles.nearbyLabelRow}>
@@ -276,6 +274,7 @@ export default function Search() {
             </View>
           )}
 
+          {/* 지역 선택 */}
           {selectedLocation === "region" && (
             <View style={styles.regionRow}>
               <TouchableOpacity
@@ -350,6 +349,7 @@ export default function Search() {
             </View>
           )}
 
+          {/* 가격 */}
           <Text style={styles.subTitle}>가격</Text>
 
           <View style={{ flexDirection: "row", justifyContent: "flex-end" }}>
@@ -366,6 +366,7 @@ export default function Search() {
 
           <Text style={styles.priceValue}>{price}만원</Text>
 
+          {/* 입소 가능 Switch */}
           <View style={styles.switchRow}>
             <Text style={styles.switchLabel}>입소 가능 여부</Text>
 
@@ -377,76 +378,75 @@ export default function Search() {
             />
           </View>
 
+          {/* 적용하기 */}
           <TouchableOpacity
-  style={styles.applyButton}
-  onPress={() => {
-    const params = {
-      type: selectedType || "",
-      locationType: selectedLocation || "",
-      sido: selectedSido || "",
-      gugun: selectedGugun || "",
-      dong: selectedDong || "",
-      distance: nearbyDistance,
-      price: price,
-      available: isAvailable ? "true" : "false",
-    };
+            style={styles.applyButton}
+            onPress={() => {
+              const params = {
+                keyword: searchText || "",
+                selectedType: selectedType || "",
+                selectedLocation: selectedLocation || "",
+                selectedSido: selectedSido || "",
+                selectedGugun: selectedGugun || "",
+                selectedDong: selectedDong || "",
+                nearbyDistance,
+                price,
+                isAvailable,
+              };
 
-    router.push({
-      pathname: "/screen/InstitutionResult",
-      params,
-    });
-  }}
->
-  <Text style={styles.applyText}>적용하기</Text>
-</TouchableOpacity>
-
+              router.push({
+                pathname: "/screen/InstitutionResult",
+                params,
+              });
+            }}
+          >
+            <Text style={styles.applyText}>적용하기</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.bottomWhiteFix} />
 
-        {/* 🔵 지역 모달 */}
+        {/* 모달 */}
         {modalVisible && (
           <View style={styles.modalOverlay}>
             <View style={styles.modalBox}>
-  <Text style={styles.modalTitle}>{modalTitle}</Text>
+              <Text style={styles.modalTitle}>{modalTitle}</Text>
 
-  {/* 🔥 리스트 영역만 스크롤되게 */}
-  <ScrollView style={{ maxHeight: 300 }}>
-    {modalItems.map((item) => (
-      <TouchableOpacity
-        key={item}
-        style={styles.modalItem}
-        onPress={() => {
-          if (modalType === "sido") {
-            setSelectedSido(item);
-            setSelectedGugun(null);
-            setSelectedDong(null);
-          } else if (modalType === "gugun") {
-            setSelectedGugun(item);
-            setSelectedDong(null);
-          } else if (modalType === "dong") {
-            setSelectedDong(item);
-          }
-          setModalVisible(false);
-        }}
-      >
-        <Text style={styles.modalItemText}>{item}</Text>
-      </TouchableOpacity>
-    ))}
-  </ScrollView>
+              <ScrollView style={{ maxHeight: 300 }}>
+                {modalItems.map((item) => (
+                  <TouchableOpacity
+                    key={item}
+                    style={styles.modalItem}
+                    onPress={() => {
+                      if (modalType === "sido") {
+                        setSelectedSido(item);
+                        setSelectedGugun(null);
+                        setSelectedDong(null);
+                      } else if (modalType === "gugun") {
+                        setSelectedGugun(item);
+                        setSelectedDong(null);
+                      } else if (modalType === "dong") {
+                        setSelectedDong(item);
+                      }
+                      setModalVisible(false);
+                    }}
+                  >
+                    <Text style={styles.modalItemText}>{item}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
 
-  <TouchableOpacity
-    onPress={() => setModalVisible(false)}
-    style={styles.modalClose}
-  >
-    <Text style={styles.modalCloseText}>닫기</Text>
-  </TouchableOpacity>
-</View>
-
+              <TouchableOpacity
+                onPress={() => setModalVisible(false)}
+                style={styles.modalClose}
+              >
+                <Text style={styles.modalCloseText}>닫기</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 
-        {/* 🔵 검색 팝업 */}
+        {/* 검색 팝업 */}
         {searchPopupVisible && (
           <>
             <View style={styles.popupOverlay} />
@@ -480,6 +480,7 @@ export default function Search() {
                   </TouchableOpacity>
                 </View>
 
+                {/* 최근 검색 */}
                 {recentKeywords.length === 0 ? (
                   <Text style={styles.noRecent}>최근 검색어가 없습니다.</Text>
                 ) : (
@@ -501,6 +502,7 @@ export default function Search() {
                   ))
                 )}
 
+                {/* 닫기 */}
                 <TouchableOpacity
                   style={styles.closePopup}
                   onPress={() => setSearchPopupVisible(false)}
@@ -518,9 +520,8 @@ export default function Search() {
   );
 }
 
-const styles = StyleSheet.create({
 
-  /* ---- 기존 스타일 그대로 (수정 X) ---- */
+const styles = StyleSheet.create({
 
   container: {
     flex: 1,
