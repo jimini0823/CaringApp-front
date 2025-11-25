@@ -33,13 +33,13 @@ export const getMyInstitutionReservationDetail = (reservationId) => {
 
 // --------------------------------------------------
 // 3. 내 기관 예약 상태 변경
-//    PUT /api/v1/my-institution/reservations/{reservationId}/status?status=COMPLETED
+//    PATCH /api/v1/my-institution/reservations/{reservationId}/status?status=COMPLETED
 // --------------------------------------------------
 export const updateMyInstitutionReservationStatus = (
   reservationId,
   status // PENDING, CANCELLED, COMPLETED
 ) => {
-  return apiClient.put(
+  return apiClient.patch(
     `/my-institution/reservations/${reservationId}/status`,
     null,
     {

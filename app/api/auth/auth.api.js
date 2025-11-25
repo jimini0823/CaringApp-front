@@ -134,3 +134,20 @@ export const refreshToken = (requestToken) => {
 export const verifyUserPhone = (payload) => {
   return apiClient.post("/auth/verify-phone", payload);
 };
+
+/* -----------------------------------------------
+ * 16. 기관 내 정보 조회
+ *     GET /auth/institution/me
+ * ----------------------------------------------- */
+export const getInstitutionMe = () => {
+  return apiClient.get("/auth/institution/me");
+};
+
+/* -----------------------------------------------
+ * 17. OAuth2 로컬 계정 연결
+ *     POST /auth/oauth2/link-local
+ * ----------------------------------------------- */
+export const linkOAuth2Local = (payload) => {
+  // payload = { username, password, gender, address: { city, street, zipCode } }
+  return apiClient.post("/auth/oauth2/link-local", payload);
+};
