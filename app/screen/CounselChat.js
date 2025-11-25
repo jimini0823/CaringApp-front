@@ -14,7 +14,7 @@ import {
 
 export default function CounselChat() {
   const router = useRouter();
-  const { id, name } = useLocalSearchParams(); // 기관 정보
+  const { id, name } = useLocalSearchParams();
 
   const [messages, setMessages] = useState([
     { id: 1, text: "채팅내용", time: "09:46", isMe: true },
@@ -47,12 +47,14 @@ export default function CounselChat() {
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 30);
   };
 
+  const isActive = input.trim().length > 0;
+
   return (
     <View style={styles.container}>
 
       <View style={styles.headerRow}>
         <TouchableOpacity
-          onPress={() => router.back()} 
+          onPress={() => router.back()}
           style={styles.backBtn}
         >
           <Ionicons name="chevron-back" size={26} color="#162B40" />
@@ -66,7 +68,7 @@ export default function CounselChat() {
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? -30 : -30}  
+        keyboardVerticalOffset={Platform.OS === "ios" ? -30 : -30}
       >
         <ScrollView
           ref={scrollRef}
@@ -107,19 +109,29 @@ export default function CounselChat() {
         </ScrollView>
 
         <View style={styles.inputArea}>
-          <TextInput
-            style={styles.input}
-            placeholder="상담내용 입력"
-            placeholderTextColor="#BFC5CC"
-            value={input}
-            onChangeText={setInput}
-            onSubmitEditing={() => sendMessage()}
-            blurOnSubmit={false}
-          />
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={styles.input}
+              placeholder="상담내용 입력"
+              placeholderTextColor="#BFC5CC"
+              value={input}
+              onChangeText={setInput}
+              onSubmitEditing={sendMessage}
+            />
 
-          <TouchableOpacity onPress={sendMessage} style={styles.sendBtn}>
-            <Ionicons name="send" size={22} color="#6B7B8C" />
-          </TouchableOpacity>
+            <TouchableOpacity
+              onPress={sendMessage}
+              disabled={!isActive}
+              style={styles.sendIconWrapper}
+            >
+              <Ionicons
+                name="paper-plane-outline"
+                size={22}
+                color={isActive ? "#5DA7DB" : "#B6BCC3"}
+                style={{ transform: [{ rotate: "20deg" }] }}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
 
       </KeyboardAvoidingView>
@@ -175,8 +187,7 @@ const styles = StyleSheet.create({
 
   rowBubble: {
     flexDirection: "row",
-    alignItems: "flex-end",
-    width: "100%"
+    alignItems: "flex-end"
   },
 
   bubble: {
@@ -210,7 +221,6 @@ const styles = StyleSheet.create({
   inputArea: {
     flexDirection: "row",
     alignItems: "flex-start",
-    justifyContent: "flex-start",
     paddingHorizontal: 12,
     paddingVertical: 25,
     backgroundColor: "white",
@@ -218,23 +228,29 @@ const styles = StyleSheet.create({
     borderTopColor: "#E6E6E6"
   },
 
-  input: {
+  inputWrapper: {
     flex: 1,
     backgroundColor: "#EEF2F6",
-    paddingHorizontal: 12,
-    paddingVertical: 15,
     borderRadius: 10,
-    fontSize: 17,
-    position: "relative",
-    top: -15,   
-    height: 45,
-  },
-
-  sendBtn: {
-    marginLeft: 10,
     height: 45,
     justifyContent: "center",
     position: "relative",
-    top: -15  
+    top: -15,
+    paddingHorizontal: 12
+  },
+
+  input: {
+    flex: 1,
+    fontSize: 17,
+    height: "100%",
+    paddingRight: 36
+  },
+
+  sendIconWrapper: {
+    position: "absolute",
+    right: 10,
+    top: "50%",
+    transform: [{ translateY: -16 }],
+    padding: 4
   }
 });

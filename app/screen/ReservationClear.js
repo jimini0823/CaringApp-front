@@ -14,7 +14,8 @@ export default function ReservationClear() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
-  const { name, date } = useLocalSearchParams();
+  // 🔥 Reservation.js에서 넘어오는 값들
+  const { name, date, mode } = useLocalSearchParams();
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -64,15 +65,25 @@ export default function ReservationClear() {
           </Text>
 
           <View style={[styles.infoBox, { marginTop: 100 }]}>
+            {/* 기관 */}
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>기관</Text>
               <Text style={styles.infoValue}>{name || "기관명"}</Text>
             </View>
 
-            <View style={[styles.infoRow, { marginBottom: 0 }]}>
+            {/* 방문일자 */}
+            <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>방문일자</Text>
               <Text style={styles.infoValue}>
                 {date || "2025년 11월 24일 11:00"}
+              </Text>
+            </View>
+
+            {/* 예약 방식 */}
+            <View style={[styles.infoRow, { marginBottom: 0 }]}>
+              <Text style={styles.infoLabel}>예약 방식</Text>
+              <Text style={styles.infoValue}>
+                {mode || "방문 상담 예약"}
               </Text>
             </View>
           </View>
@@ -118,7 +129,7 @@ const styles = StyleSheet.create({
   },
 
   subtitle: {
-    fontSize: 16,
+    fontSize: 18,
     color: "#6B7B8C",
     textAlign: "center",
     lineHeight: 24,
@@ -129,7 +140,7 @@ const styles = StyleSheet.create({
     width: "90%",
     backgroundColor: "#F5F9FC",
     borderRadius: 12,
-    paddingVertical: 16,   
+    paddingVertical: 16,
     paddingHorizontal: 18,
     elevation: 2,
     zIndex: 20,
@@ -139,7 +150,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "flex-start",
     alignItems: "center",
-    marginBottom: 12,   
+    marginBottom: 12,
   },
 
   infoLabel: {

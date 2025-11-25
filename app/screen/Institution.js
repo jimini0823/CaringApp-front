@@ -13,10 +13,10 @@ import {
   View,
 } from "react-native";
 
+import BottomTabBar from "../../components/BottomTabBar";
 import { getCounselList } from "../api/institution/counsel.api";
 import { getInstitutionDetail } from "../api/institution/profile.api";
 import { getInstitutionReviews } from "../api/institution/review.api";
-import BottomTabBar from "../../components/BottomTabBar";
 
 const { width } = Dimensions.get("window");
 

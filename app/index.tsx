@@ -10,19 +10,15 @@ export default function Index() {
   useEffect(() => {
     const checkAuthAndNavigate = async () => {
       try {
-        // 토큰 확인
         const token = await getAccessToken();
         
         if (token) {
-          // 토큰이 있으면 홈 화면으로
           router.replace("/screen/Home");
         } else {
-          // 토큰이 없으면 로그인 화면으로
           router.replace("/screen/Login");
         }
       } catch (error) {
         console.log("Auth check error:", error);
-        // 에러 발생 시 로그인 화면으로
         router.replace("/screen/Login");
       } finally {
         setIsChecking(false);
