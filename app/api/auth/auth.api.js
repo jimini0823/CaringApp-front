@@ -79,6 +79,8 @@ export const sendOAuth2CertificationCode = (payload) => {
 /* -----------------------------------------------
  * 10. OAuth2 로그인
  *     POST /auth/oauth2/login/{provider}
+ *     provider는 경로 파라미터로 전달
+ *     Request body: { authorization_code, state }
  * ----------------------------------------------- */
 export const loginOAuth2 = (provider, payload) => {
   return apiClient.post(`/auth/oauth2/login/${provider}`, payload);

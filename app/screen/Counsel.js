@@ -39,10 +39,10 @@ export default function Counsel() {
         id: request.id,
         chatRoomId: request.chatRoomId,
         name: request.institution?.name || "기관명 없음",
-        image: request.institution?.imageUrl || "https://cdn.pixabay.com/photo/2020/01/28/12/38/building-4803763_1280.jpg",
+        image: request.institution?.imageUrl || request.institution?.bannerImageUrl || "https://via.placeholder.com/55?text=No+Image",
         lastMessage: request.lastMessageContent || "메시지가 없습니다.",
         lastTime: request.lastMessageAt ? new Date(request.lastMessageAt) : new Date(request.createdAt),
-        unread: 0,
+        unread: request.unreadCount || 0,
         status: request.status,
       }));
 

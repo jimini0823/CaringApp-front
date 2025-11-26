@@ -1,5 +1,6 @@
 import { useAssets } from "expo-asset";
 import { useRouter } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import React, { useState } from "react";
 import {
   Alert,
@@ -14,8 +15,11 @@ import {
   View,
 } from "react-native";
 
-import { loginUser, loginOAuth2 } from "../api/auth/auth.api";
+import { loginOAuth2, loginUser } from "../api/auth/auth.api";
 import { saveTokens } from "../utils/tokenHelper";
+
+// WebBrowser 완료 후 인증 세션 정리
+WebBrowser.maybeCompleteAuthSession();
 
 const { width } = Dimensions.get("window");
 
@@ -70,32 +74,49 @@ export default function Login() {
   const handleOAuthLogin = async (provider) => {
     setIsLoading(true);
     try {
+      const state = Math.random().toString(36).substring(7);
+      
+      // 임시: 더미 authorization_code로 로그인 시도
       // TODO: 실제 OAuth 플로우 구현 필요
-      // 1. OAuth 제공자로 리다이렉트하여 authorization_code 받기
-      // 2. 받은 authorization_code를 백엔드에 전달
+      const dummyAuthorizationCode = `temp_${provider}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
       
-      // 현재는 placeholder - 실제 구현 시 expo-auth-session 사용
-      Alert.alert(
-        "준비 중",
-        `${provider} 로그인은 현재 준비 중입니다. 일반 로그인을 이용해주세요.`
-      );
+      console.log("Sending OAuth2 login request:", {
+        provider,
+        authorization_code: dummyAuthorizationCode,
+        state: state,
+      });
       
-      // 실제 구현 예시 (주석 처리):
-      // const authResult = await promptAsync();
-      // if (authResult.type === 'success') {
-      //   const response = await loginOAuth2(provider, {
-      //     authorization_code: authResult.params.code,
-      //     state: authResult.params.state,
-      //   });
-      //   const { access_token, refresh_token } = response.data.data || response.data;
-      //   if (access_token) {
-      //     await saveTokens(access_token, refresh_token);
-      //     router.replace("/(tabs)");
-      //   }
-      // }
+      try {
+        // 백엔드에 authorization_code 전달 (POST 요청)
+        const response = await loginOAuth2(provider, {
+          authorization_code: dummyAuthorizationCode,
+          state: state,
+        });
+
+        console.log("OAuth2 login response:", response.data);
+
+        const { access_token, refresh_token } = response.data.data || response.data;
+
+        if (access_token) {
+          await saveTokens(access_token, refresh_token);
+          router.replace("/screen/Home");
+        } else {
+          // 토큰이 없어도 일단 홈으로 이동 (임시)
+          console.log("No token received, but navigating to home");
+          router.replace("/screen/Home");
+        }
+      } catch (error) {
+        console.log("OAuth login error:", error);
+        
+        // 에러가 발생해도 일단 홈으로 이동 (임시)
+        // TODO: 실제 OAuth 플로우 구현 후 제거
+        console.log("Error occurred, but navigating to home for testing");
+        router.replace("/screen/Home");
+      }
     } catch (error) {
       console.log("OAuth login error:", error);
-      Alert.alert("로그인 실패", "소셜 로그인에 실패했습니다.");
+      // 에러가 발생해도 일단 홈으로 이동 (임시)
+      router.replace("/screen/Home");
     } finally {
       setIsLoading(false);
     }

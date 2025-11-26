@@ -14,14 +14,25 @@ export default function Bell() {
   const router = useRouter();
 
   const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const mockData = [
-      { id: 1, message: "알림" },
-      { id: 2, message: "API 연결해두기" },
-    ];
-    setNotifications(mockData);
+    fetchNotifications();
   }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      // TODO: 실제 알림 API가 구현되면 여기에 연결
+      // 현재는 알림 API가 없으므로 빈 배열로 설정
+      setNotifications([]);
+    } catch (error) {
+      console.log("Fetch notifications error:", error);
+      setNotifications([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -42,19 +53,29 @@ export default function Bell() {
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
       >
-        {notifications.map((item) => (
-          <View key={item.id} style={styles.notificationBox}>
-            <View style={styles.iconCircle}>
-              <Image
-                source={require("../../assets/images/icons/bell.png")}
-                style={styles.icon}
-                resizeMode="contain"
-              />
-            </View>
-
-            <Text style={styles.notificationText}>{item.message}</Text>
+        {loading ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>알림을 불러오는 중...</Text>
           </View>
-        ))}
+        ) : notifications.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>알림이 없습니다.</Text>
+          </View>
+        ) : (
+          notifications.map((item) => (
+            <View key={item.id} style={styles.notificationBox}>
+              <View style={styles.iconCircle}>
+                <Image
+                  source={require("../../assets/images/icons/bell.png")}
+                  style={styles.icon}
+                  resizeMode="contain"
+                />
+              </View>
+
+              <Text style={styles.notificationText}>{item.message}</Text>
+            </View>
+          ))
+        )}
       </ScrollView>
     </View>
   );
@@ -125,5 +146,15 @@ const styles = StyleSheet.create({
     marginLeft: 15,
     fontSize: 14,
     color: "#6B7B8C",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 50,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "#8A8A8A",
   },
 });

@@ -1,10 +1,9 @@
 import axios from "axios";
 import {
-  getSignupToken,
+  clearTokens,
   getAccessToken,
   getRefreshToken,
-  saveTokens,
-  clearTokens,
+  saveTokens
 } from "../utils/tokenHelper";
 
 const api = axios.create({
@@ -54,6 +53,7 @@ api.interceptors.request.use(
       "/auth/verify-phone",
       "/auth/token/refresh",
       "/auth/oauth2/login",
+      "/auth/oauth2/authorize",
       "/auth/oauth2/certification-code",
       "/auth/oauth2/register",
       "/auth/oauth2/verify-phone",

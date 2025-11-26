@@ -46,7 +46,10 @@ export default function RecommendText() {
         <View style={styles.bottomBox}>
           <TouchableOpacity
             style={styles.button}
-            onPress={() => router.push("/screen/RecommendStart")}
+            onPress={() => router.push({
+              pathname: "/screen/RecommendStart",
+              params: { additionalText: text }
+            })}
             activeOpacity={0.8}
           >
             <Text style={styles.buttonText}>기관 추천받기</Text>

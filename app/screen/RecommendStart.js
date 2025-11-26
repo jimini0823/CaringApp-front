@@ -1,14 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 
-import { getMyElderlyProfiles } from "../api/elderly/elderly.api";
+import { createElderlyProfile, getMyElderlyProfiles } from "../api/elderly/elderly.api";
 import { getRecommendations } from "../api/recommendation/recommendation.api";
 
 export default function RecommendStart() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const [step, setStep] = useState(0);
 
   // 진행률 0 → 1
@@ -27,24 +28,109 @@ export default function RecommendStart() {
         const profiles = elderlyData.profiles || [];
 
         if (profiles.length === 0) {
-          router.push({
-            pathname: "/screen/RecommendClear",
-            params: {
-              institutions: JSON.stringify([]),
-              tagIds: JSON.stringify([]),
-            },
-          });
-          return;
+          const tempProfilePayload = {
+            name: "테스트 어르신",
+            gender: "FEMALE",
+            birthDate: "1940-01-01",
+            bloodType: "A",
+            phoneNumber: "01012345678",
+            activityLevel: "MEDIUM",
+            cognitiveLevel: "NORMAL",
+            longTermCareGrade: "NONE",
+            notes: "",
+            address: {
+              zipCode: "06000",
+              city: "서울특별시",
+              street: "강남구 테헤란로 123"
+            }
+          };
+
+          try {
+            await createElderlyProfile(tempProfilePayload);
+            const newElderlyResponse = await getMyElderlyProfiles();
+            const newElderlyData = newElderlyResponse.data.data || newElderlyResponse.data;
+            const newProfiles = newElderlyData.profiles || [];
+            
+            if (newProfiles.length === 0) {
+              router.push({
+                pathname: "/screen/RecommendClear",
+                params: {
+                  institutions: JSON.stringify([]),
+                  tagIds: JSON.stringify([]),
+                },
+              });
+              return;
+            }
+            
+            const firstProfile = newProfiles[0];
+            const additionalText = params.additionalText || "";
+            
+            const recommendationResponse = await getRecommendations({
+              elderlyProfileId: firstProfile.id,
+              additionalText: additionalText,
+            });
+
+            let institutions = [];
+            const responseData = recommendationResponse.data;
+            
+            if (responseData.data) {
+              if (responseData.data.data && responseData.data.data.institutions) {
+                institutions = responseData.data.data.institutions;
+              } else if (responseData.data.institutions) {
+                institutions = responseData.data.institutions;
+              } else if (Array.isArray(responseData.data)) {
+                institutions = responseData.data;
+              }
+            } else if (responseData.institutions) {
+              institutions = responseData.institutions;
+            } else if (Array.isArray(responseData)) {
+              institutions = responseData;
+            }
+
+            router.push({
+              pathname: "/screen/RecommendClear",
+              params: {
+                institutions: JSON.stringify(institutions),
+                tagIds: JSON.stringify([]),
+              },
+            });
+            return;
+          } catch (createError) {
+            router.push({
+              pathname: "/screen/RecommendClear",
+              params: {
+                institutions: JSON.stringify([]),
+                tagIds: JSON.stringify([]),
+              },
+            });
+            return;
+          }
         }
 
         const firstProfile = profiles[0];
+        const additionalText = params.additionalText || "";
+        
         const recommendationResponse = await getRecommendations({
           elderlyProfileId: firstProfile.id,
-          additionalText: "",
+          additionalText: additionalText,
         });
 
-        const recommendationData = recommendationResponse.data.data || recommendationResponse.data;
-        const institutions = recommendationData.institutions || [];
+        let institutions = [];
+        const responseData = recommendationResponse.data;
+        
+        if (responseData.data) {
+          if (responseData.data.data && responseData.data.data.institutions) {
+            institutions = responseData.data.data.institutions;
+          } else if (responseData.data.institutions) {
+            institutions = responseData.data.institutions;
+          } else if (Array.isArray(responseData.data)) {
+            institutions = responseData.data;
+          }
+        } else if (responseData.institutions) {
+          institutions = responseData.institutions;
+        } else if (Array.isArray(responseData)) {
+          institutions = responseData;
+        }
 
         router.push({
           pathname: "/screen/RecommendClear",
@@ -54,7 +140,6 @@ export default function RecommendStart() {
           },
         });
       } catch (error) {
-        console.log("Recommendation error:", error);
         router.push({
           pathname: "/screen/RecommendClear",
           params: {

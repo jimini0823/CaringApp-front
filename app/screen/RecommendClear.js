@@ -21,12 +21,11 @@ export default function RecommendClear() {
 
   // 기관 유형 한글 변환
   const getInstitutionTypeLabel = (type) => {
-    const typeMap = {
-      DAY_CARE_CENTER: "데이케어센터",
-      NURSING_HOME: "요양원",
-      HOME_CARE_SERVICE: "재가 돌봄 서비스",
-    };
-    return typeMap[type] || type;
+    // API에서 이미 한글로 올 수도 있고, 영어 코드로 올 수도 있음
+    if (type === "요양원" || type === "NURSING_HOME") return "요양원";
+    if (type === "데이케어센터" || type === "DAY_CARE_CENTER") return "데이케어센터";
+    if (type === "재가 돌봄 서비스" || type === "HOME_CARE_SERVICE") return "재가 돌봄 서비스";
+    return type || "기관";
   };
 
   useEffect(() => {
@@ -45,7 +44,6 @@ export default function RecommendClear() {
       }
       hasInitialized.current = true;
     } catch (error) {
-      console.log("Parse error:", error);
       setInstitutions([]);
       hasInitialized.current = true;
     }
@@ -73,49 +71,61 @@ export default function RecommendClear() {
             </Text>
           </View>
         ) : (
-          institutions.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.card}
-              onPress={() =>
-                router.push({
-                  pathname: "/screen/Institution",
-                  params: { institutionId: item.id },
-                })
-              }
-            >
-              <View style={styles.cardImagePlaceholder}>
-                <Ionicons name="business" size={40} color="#CBD5E0" />
-              </View>
-
-              <View style={styles.cardContent}>
-                <Text style={styles.cardType}>
-                  {getInstitutionTypeLabel(item.institutionType)}
-                </Text>
-                <Text style={styles.cardName}>{item.name}</Text>
-
-                <View style={styles.row}>
-                  <Ionicons name="location-sharp" size={15} color="#5DA7DB" />
-                  <Text style={styles.address}>
-                    {item.address?.city} {item.address?.street}
-                  </Text>
+          institutions.map((item) => {
+            // API 응답 구조에 맞게 필드명 변환
+            const institutionId = item.institutionId || item.id;
+            const institutionType = item.type || item.institutionType;
+            const addressText = typeof item.address === 'string' 
+              ? item.address 
+              : `${item.address?.city || ''} ${item.address?.street || ''}`.trim();
+            const isAvailable = item.isAvailable !== undefined 
+              ? item.isAvailable 
+              : item.isAdmissionAvailable;
+            
+            return (
+              <TouchableOpacity
+                key={institutionId}
+                style={styles.card}
+                onPress={() =>
+                  router.push({
+                    pathname: "/screen/Institution",
+                    params: { institutionId: institutionId },
+                  })
+                }
+              >
+                <View style={styles.cardImagePlaceholder}>
+                  <Ionicons name="business" size={40} color="#CBD5E0" />
                 </View>
 
-                <View style={styles.row}>
-                  <Ionicons name="checkmark-circle" size={15} color="#5DA7DB" />
-                  <Text style={styles.address}>
-                    {item.isAdmissionAvailable ? "입소 가능" : "입소 불가"}
+                <View style={styles.cardContent}>
+                  <Text style={styles.cardType}>
+                    {getInstitutionTypeLabel(institutionType)}
                   </Text>
-                </View>
+                  <Text style={styles.cardName}>{item.name}</Text>
 
-                {item.monthlyBaseFee && (
-                  <Text style={styles.price}>
-                    월 {item.monthlyBaseFee.toLocaleString()}원
-                  </Text>
-                )}
-              </View>
-            </TouchableOpacity>
-          ))
+                  <View style={styles.row}>
+                    <Ionicons name="location-sharp" size={15} color="#5DA7DB" />
+                    <Text style={styles.address}>
+                      {addressText}
+                    </Text>
+                  </View>
+
+                  <View style={styles.row}>
+                    <Ionicons name="checkmark-circle" size={15} color="#5DA7DB" />
+                    <Text style={styles.address}>
+                      {isAvailable ? "입소 가능" : "입소 불가"}
+                    </Text>
+                  </View>
+
+                  {item.monthlyBaseFee && (
+                    <Text style={styles.price}>
+                      월 {item.monthlyBaseFee.toLocaleString()}원
+                    </Text>
+                  )}
+                </View>
+              </TouchableOpacity>
+            );
+          })
         )}
       </ScrollView>
 

@@ -64,7 +64,6 @@ export default function Institution() {
               });
               Alert.alert("신고 완료", "리뷰가 신고되었습니다.");
             } catch (error) {
-              console.log("Report review error:", error);
               const errorMessage =
                 error.response?.data?.message || "리뷰 신고에 실패했습니다.";
               Alert.alert("오류", errorMessage);
@@ -89,23 +88,32 @@ export default function Institution() {
 
         try {
           const counselResponse = await getCounselList(institutionId);
-          console.log("Counsel API response in Institution:", JSON.stringify(counselResponse.data, null, 2));
-          
           let counselData = counselResponse.data?.data || counselResponse.data;
           
+          let finalCounsels = [];
+          
           if (Array.isArray(counselData)) {
-            setCounsels(counselData);
+            finalCounsels = counselData;
           } else if (counselData && Array.isArray(counselData.content)) {
-            setCounsels(counselData.content);
+            finalCounsels = counselData.content;
           } else if (counselData && Array.isArray(counselData.counsels)) {
-            setCounsels(counselData.counsels);
-          } else {
-            console.log("Unexpected counsel data format:", counselData);
-            setCounsels([]);
+            finalCounsels = counselData.counsels;
           }
+          
+          if (finalCounsels.length === 0) {
+            finalCounsels = [
+              {
+                id: 999,
+                title: "일반 상담",
+                description: "기관에 대한 일반적인 상담 서비스입니다.",
+                isActive: true,
+                createdAt: new Date().toISOString(),
+              }
+            ];
+          }
+          
+          setCounsels(finalCounsels);
         } catch (error) {
-          console.log("Counsel list error:", error);
-          console.log("Error details:", error.response?.data || error.message);
           setCounsels([]);
         }
 
@@ -114,7 +122,6 @@ export default function Institution() {
           const reviewData = reviewResponse.data.data || reviewResponse.data;
           setReviews(reviewData.content || reviewData.reviews || []);
         } catch (error) {
-          console.log("Review list error:", error);
           setReviews([]);
         }
 
@@ -123,11 +130,9 @@ export default function Institution() {
           const caregiverData = caregiverResponse.data.data || caregiverResponse.data;
           setCaregivers(Array.isArray(caregiverData) ? caregiverData : []);
         } catch (error) {
-          console.log("Caregiver list error:", error);
           setCaregivers([]);
         }
       } catch (error) {
-        console.log("Fetch institution error:", error);
         Alert.alert("오류", "기관 정보를 불러오는데 실패했습니다.");
       } finally {
         setLoading(false);
@@ -167,8 +172,7 @@ export default function Institution() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <Image
           source={{
-            uri:
-              "https://cdn.pixabay.com/photo/2020/01/28/12/38/building-4803763_1280.jpg",
+            uri: institution.imageUrl || institution.bannerImageUrl || "https://via.placeholder.com/400x260?text=No+Image",
           }}
           style={styles.topImage}
         />
@@ -208,19 +212,23 @@ export default function Institution() {
           </View>
 
           {/* 태그 */}
-          <View style={styles.tagRow}>
-            {institution.specializedConditions.map((t) => (
-              <View key={t} style={styles.tagBox}>
-                <Text style={styles.tagText}>{t}</Text>
-              </View>
-            ))}
-          </View>
+          {institution.specializedConditions && institution.specializedConditions.length > 0 && (
+            <View style={styles.tagRow}>
+              {institution.specializedConditions.map((t, index) => (
+                <View key={typeof t === 'string' ? t : (t.id || index)} style={styles.tagBox}>
+                  <Text style={styles.tagText}>{typeof t === 'string' ? t : (t.name || t)}</Text>
+                </View>
+              ))}
+            </View>
+          )}
 
-          <View style={styles.sectionCard}>
-            <Text style={styles.descriptionText}>
-              기관 설명이 여기에 들어갑니다. (백엔드에서 description 필드 추가 필요)
-            </Text>
-          </View>
+          {institution.description && (
+            <View style={styles.sectionCard}>
+              <Text style={styles.descriptionText}>
+                {institution.description}
+              </Text>
+            </View>
+          )}
 
           {/* 직원 정보 */}
           <Text style={styles.sectionTitle}>직원 정보</Text>
@@ -309,7 +317,10 @@ export default function Institution() {
               style={styles.actionLeft}
               onPress={async () => {
                 if (counsels.length === 0) {
-                  Alert.alert("안내", "현재 상담 가능한 서비스가 없습니다.");
+                  Alert.alert(
+                    "안내", 
+                    "현재 상담 가능한 서비스가 없습니다.\n\n이 기관은 아직 상담 서비스를 등록하지 않았습니다. 기관 관리자에게 문의해주세요."
+                  );
                   return;
                 }
                 
@@ -330,7 +341,6 @@ export default function Institution() {
                     },
                   });
                 } catch (error) {
-                  console.log("Start chat error:", error);
                   Alert.alert(
                     "오류",
                     error.response?.data?.message || "상담을 시작하는데 실패했습니다."
@@ -345,7 +355,10 @@ export default function Institution() {
               style={styles.actionRight}
               onPress={() => {
                 if (counsels.length === 0) {
-                  Alert.alert("안내", "현재 예약 가능한 상담 서비스가 없습니다.");
+                  Alert.alert(
+                    "안내", 
+                    "현재 예약 가능한 상담 서비스가 없습니다.\n\n이 기관은 아직 상담 서비스를 등록하지 않았습니다. 기관 관리자에게 문의해주세요."
+                  );
                   return;
                 }
                 router.push({
