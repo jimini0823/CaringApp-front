@@ -38,10 +38,10 @@ export const reportReview = (reviewId, payload) => {
 };
 
 // ------------------------------
-// 6. 내가 작성한 리뷰 목록 (GET /api/v1/reviews/my?page=&size=&sort=)
+// 6. 내가 작성한 리뷰 목록 (GET /api/v1/members/me/reviews?page=&size=&sort=)
 // ------------------------------
 export const getMyReviews = (page = 0, size = 10, sort = "createdAt,desc") => {
-  return apiClient.get(`/reviews/my`, {
+  return apiClient.get(`/members/me/reviews`, {
     params: {
       page,
       size,

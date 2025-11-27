@@ -63,17 +63,17 @@ export default function Bell() {
           </View>
         ) : (
           notifications.map((item) => (
-            <View key={item.id} style={styles.notificationBox}>
-              <View style={styles.iconCircle}>
-                <Image
-                  source={require("../../assets/images/icons/bell.png")}
-                  style={styles.icon}
-                  resizeMode="contain"
-                />
-              </View>
-
-              <Text style={styles.notificationText}>{item.message}</Text>
+          <View key={item.id} style={styles.notificationBox}>
+            <View style={styles.iconCircle}>
+              <Image
+                source={require("../../assets/images/icons/bell.png")}
+                style={styles.icon}
+                resizeMode="contain"
+              />
             </View>
+
+            <Text style={styles.notificationText}>{item.message}</Text>
+          </View>
           ))
         )}
       </ScrollView>

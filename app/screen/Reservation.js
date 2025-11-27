@@ -82,12 +82,20 @@ export default function Reservation() {
       }
     } catch (error) {
       console.log("Fetch first institution error:", error);
+      console.log("Error response:", error.response?.data);
+      console.log("Error status:", error.response?.status);
       
-      // 401 에러인 경우 로그인 화면으로 리다이렉트
-      if (error.response?.status === 401 || error.message === "No refresh token") {
+      if (error.response?.status === 404) {
+        Alert.alert(
+          "서버 오류",
+          "기관 목록 API를 찾을 수 없습니다.\n서버 설정을 확인해주세요."
+        );
+      } else if (error.response?.status === 401 || error.message === "No refresh token") {
         Alert.alert("로그인 필요", "예약 기능을 사용하려면 로그인이 필요합니다.", [
           { text: "확인", onPress: () => router.replace("/screen/Login") },
         ]);
+      } else {
+        Alert.alert("오류", "기관 목록을 불러오는데 실패했습니다.");
       }
       
       setLoadingCounsels(false);
@@ -172,6 +180,7 @@ export default function Reservation() {
         date
       );
       const data = response.data.data || response.data;
+      // Swagger 응답 구조: { counselId, serviceDate, timeSlots: [...] }
       setAvailableTimes(data.timeSlots || []);
     } catch (error) {
       Alert.alert("오류", "예약 가능 시간을 불러오는데 실패했습니다.");

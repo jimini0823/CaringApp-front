@@ -52,13 +52,34 @@ export default function Mypage() {
   const fetchMypageData = async () => {
     try {
       const mypageResponse = await getMyPage();
-      setMypageData(mypageResponse.data.data || mypageResponse.data);
+      const mypageData = mypageResponse.data.data || mypageResponse.data;
+      setMypageData(mypageData);
 
-      try {
-        const statsResponse = await getMyStatistics();
-        setStatistics(statsResponse.data.data || statsResponse.data);
-      } catch (error) {
-        console.log("Fetch statistics error:", error);
+      // mypage API 응답에 이미 statistics가 포함되어 있음
+      if (mypageData.statistics) {
+        setStatistics(mypageData.statistics);
+      } else {
+        // fallback: 별도 API 호출
+        try {
+          const statsResponse = await getMyStatistics();
+          setStatistics(statsResponse.data.data || statsResponse.data);
+        } catch (error) {
+          console.log("Fetch statistics error:", error);
+        }
+      }
+
+      // mypage API 응답에 이미 recentReviews가 포함되어 있음
+      if (mypageData.recentReviews) {
+        setMyReviews(mypageData.recentReviews || []);
+      } else {
+        // fallback: 별도 API 호출
+        try {
+          const reviewsResponse = await getMyReviews();
+          const reviewsData = reviewsResponse.data.data || reviewsResponse.data;
+          setMyReviews(reviewsData.content || reviewsData.reviews || []);
+        } catch (error) {
+          console.log("Fetch my reviews error:", error);
+        }
       }
 
       try {
@@ -67,14 +88,6 @@ export default function Mypage() {
         setPreferenceTags(tagsData.tags || tagsData || []);
       } catch (error) {
         console.log("Fetch preference tags error:", error);
-      }
-
-      try {
-        const reviewsResponse = await getMyReviews();
-        const reviewsData = reviewsResponse.data.data || reviewsResponse.data;
-        setMyReviews(reviewsData.content || reviewsData.reviews || []);
-      } catch (error) {
-        console.log("Fetch my reviews error:", error);
       }
     } catch (error) {
       console.log("Fetch mypage data error:", error);
@@ -159,19 +172,25 @@ export default function Mypage() {
       <View style={styles.content}>
         {isLoggedIn ? (
           <>
-            {mypageData && (
+            {mypageData && mypageData.member && (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>회원 정보</Text>
                 <View style={styles.infoCard}>
                   <Text style={styles.infoLabel}>이름</Text>
                   <Text style={styles.infoValue}>
-                    {mypageData.name || mypageData.username || "-"}
+                    {mypageData.member.name || "-"}
                   </Text>
                 </View>
-                {mypageData.email && (
+                {mypageData.member.phoneNumber && (
                   <View style={styles.infoCard}>
-                    <Text style={styles.infoLabel}>이메일</Text>
-                    <Text style={styles.infoValue}>{mypageData.email}</Text>
+                    <Text style={styles.infoLabel}>전화번호</Text>
+                    <Text style={styles.infoValue}>{mypageData.member.phoneNumber}</Text>
+                  </View>
+                )}
+                {mypageData.member.birthDate && (
+                  <View style={styles.infoCard}>
+                    <Text style={styles.infoLabel}>생년월일</Text>
+                    <Text style={styles.infoValue}>{mypageData.member.birthDate}</Text>
                   </View>
                 )}
               </View>
@@ -183,21 +202,15 @@ export default function Mypage() {
                 <View style={styles.statsContainer}>
                   <View style={styles.statCard}>
                     <Text style={styles.statValue}>
-                      {statistics.totalReservations || 0}
-                    </Text>
-                    <Text style={styles.statLabel}>예약</Text>
-                  </View>
-                  <View style={styles.statCard}>
-                    <Text style={styles.statValue}>
-                      {statistics.totalReviews || 0}
-                    </Text>
-                    <Text style={styles.statLabel}>리뷰</Text>
-                  </View>
-                  <View style={styles.statCard}>
-                    <Text style={styles.statValue}>
-                      {statistics.totalElderlyProfiles || 0}
+                      {statistics.elderlyCount || 0}
                     </Text>
                     <Text style={styles.statLabel}>어르신 프로필</Text>
+                  </View>
+                  <View style={styles.statCard}>
+                    <Text style={styles.statValue}>
+                      {statistics.reviewCount || 0}
+                    </Text>
+                    <Text style={styles.statLabel}>리뷰</Text>
                   </View>
                 </View>
               </View>

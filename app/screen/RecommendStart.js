@@ -52,14 +52,14 @@ export default function RecommendStart() {
             const newProfiles = newElderlyData.profiles || [];
             
             if (newProfiles.length === 0) {
-              router.push({
-                pathname: "/screen/RecommendClear",
-                params: {
-                  institutions: JSON.stringify([]),
-                  tagIds: JSON.stringify([]),
-                },
-              });
-              return;
+          router.push({
+            pathname: "/screen/RecommendClear",
+            params: {
+              institutions: JSON.stringify([]),
+              tagIds: JSON.stringify([]),
+            },
+          });
+          return;
             }
             
             const firstProfile = newProfiles[0];

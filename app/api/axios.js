@@ -62,6 +62,7 @@ api.interceptors.request.use(
       "/auth/institution/register",
       "/auth/institution/verify-phone",
       "/auth/institution/token/refresh",
+      "/public/advertisements",
     ];
 
     if (noAuthNeeded.some((path) => config.url.includes(path))) {

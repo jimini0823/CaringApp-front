@@ -20,11 +20,13 @@ export const createCounsel = (institutionId, payload) => {
 
 // --------------------------------------------------
 // 3. 상담 예약 가능 시간 조회
-//    GET /institutions/{institutionId}/counsels/{counselId}?date=
+//    GET /public/institutions/{counselId}/details?date=
+//    Swagger 실제 경로: /api/v1/public/institutions/{counselId}/details
 // --------------------------------------------------
 export const getCounselAvailableTimes = (institutionId, counselId, date) => {
+  // institutionId는 사용하지 않지만 호환성을 위해 파라미터 유지
   return apiClient.get(
-    `/institutions/${institutionId}/counsels/${counselId}`,
+    `/public/institutions/${counselId}/details`,
     {
       params: { date }, // yyyy-MM-dd
     }

@@ -83,47 +83,47 @@ export default function RecommendClear() {
               : item.isAdmissionAvailable;
             
             return (
-              <TouchableOpacity
+            <TouchableOpacity
                 key={institutionId}
-                style={styles.card}
-                onPress={() =>
-                  router.push({
-                    pathname: "/screen/Institution",
+              style={styles.card}
+              onPress={() =>
+                router.push({
+                  pathname: "/screen/Institution",
                     params: { institutionId: institutionId },
-                  })
-                }
-              >
-                <View style={styles.cardImagePlaceholder}>
-                  <Ionicons name="business" size={40} color="#CBD5E0" />
-                </View>
+                })
+              }
+            >
+              <View style={styles.cardImagePlaceholder}>
+                <Ionicons name="business" size={40} color="#CBD5E0" />
+              </View>
 
-                <View style={styles.cardContent}>
-                  <Text style={styles.cardType}>
+              <View style={styles.cardContent}>
+                <Text style={styles.cardType}>
                     {getInstitutionTypeLabel(institutionType)}
-                  </Text>
-                  <Text style={styles.cardName}>{item.name}</Text>
+                </Text>
+                <Text style={styles.cardName}>{item.name}</Text>
 
-                  <View style={styles.row}>
-                    <Ionicons name="location-sharp" size={15} color="#5DA7DB" />
-                    <Text style={styles.address}>
+                <View style={styles.row}>
+                  <Ionicons name="location-sharp" size={15} color="#5DA7DB" />
+                  <Text style={styles.address}>
                       {addressText}
-                    </Text>
-                  </View>
-
-                  <View style={styles.row}>
-                    <Ionicons name="checkmark-circle" size={15} color="#5DA7DB" />
-                    <Text style={styles.address}>
-                      {isAvailable ? "입소 가능" : "입소 불가"}
-                    </Text>
-                  </View>
-
-                  {item.monthlyBaseFee && (
-                    <Text style={styles.price}>
-                      월 {item.monthlyBaseFee.toLocaleString()}원
-                    </Text>
-                  )}
+                  </Text>
                 </View>
-              </TouchableOpacity>
+
+                <View style={styles.row}>
+                  <Ionicons name="checkmark-circle" size={15} color="#5DA7DB" />
+                  <Text style={styles.address}>
+                      {isAvailable ? "입소 가능" : "입소 불가"}
+                  </Text>
+                </View>
+
+                {item.monthlyBaseFee && (
+                  <Text style={styles.price}>
+                    월 {item.monthlyBaseFee.toLocaleString()}원
+                  </Text>
+                )}
+              </View>
+            </TouchableOpacity>
             );
           })
         )}

@@ -101,7 +101,7 @@
 
 ### InstitutionResult.js
 
-#### `GET /institutions/profile` - 기관 목록 조회
+#### `GET /public/institutions` - 기관 목록 조회
 - **함수**: `getInstitutionList(params)`
 - **파일**: `app/api/institution/profile.api.js`
 - **파라미터**:
@@ -146,7 +146,7 @@
 
 ### Institution.js
 
-#### `GET /institutions/profile/{institutionId}` - 기관 상세 조회
+#### `GET /public/institutions/{institutionId}` - 기관 상세 조회
 - **함수**: `getInstitutionDetail(institutionId)`
 - **파일**: `app/api/institution/profile.api.js`
 - **응답**: 기관 상세 정보 객체
@@ -230,7 +230,7 @@
 
 ### Reservation.js
 
-#### `GET /institutions/profile` - 기관 목록 조회
+#### `GET /public/institutions` - 기관 목록 조회
 - **함수**: `getInstitutionList({ page: 0, size: 1 })`
 - **파일**: `app/api/institution/profile.api.js`
 - **용도**: institutionId가 없을 때 첫 번째 기관 자동 선택
@@ -477,7 +477,7 @@
   ```
 - **인증 필요**: ✅
 
-#### `GET /reviews/my` - 내가 작성한 리뷰 목록 조회
+#### `GET /members/me/reviews` - 내가 작성한 리뷰 목록 조회
 - **함수**: `getMyReviews(page, size, sort)`
 - **파일**: `app/api/review/review.api.js`
 - **파라미터**:
@@ -508,7 +508,7 @@
 
 ### RecommendStart.js
 
-#### `GET /me/elderly-profiles` - 내 어르신 프로필 목록 조회
+#### `GET /members/me/elderly-profiles` - 내 어르신 프로필 목록 조회
 - **함수**: `getMyElderlyProfiles()`
 - **파일**: `app/api/elderly/elderly.api.js`
 - **응답**: 
@@ -524,7 +524,7 @@
 - **인증 필요**: ✅
 - **참고**: 프로필이 없을 경우 임시 프로필 자동 생성
 
-#### `POST /recommendations` - 기관 추천
+#### `POST /members/me/recommendations` - 기관 추천
 - **함수**: `getRecommendations(payload)`
 - **파일**: `app/api/recommendation/recommendation.api.js`
 - **파라미터**:
@@ -608,7 +608,7 @@
 
 ### Welcome.js
 
-#### `POST /me/elderly-profiles` - 어르신 프로필 생성
+#### `POST /members/me/elderly-profiles` - 어르신 프로필 생성
 - **함수**: `createElderlyProfile(payload)`
 - **파일**: `app/api/elderly/elderly.api.js`
 - **파라미터**:

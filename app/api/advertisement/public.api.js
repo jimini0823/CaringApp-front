@@ -1,9 +1,9 @@
 import apiClient from "../axios";
 
 export const getActiveAdvertisements = () => {
-  return apiClient.get("/advertisements/active");
+  return apiClient.get("/public/advertisements");
 };
 
 export const getActiveAdvertisementsByType = (type) => {
-  return apiClient.get(`/advertisements/active/type/${type}`);
+  return apiClient.get(`/public/advertisements/type/${type}`);
 };

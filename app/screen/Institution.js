@@ -213,21 +213,21 @@ export default function Institution() {
 
           {/* 태그 */}
           {institution.specializedConditions && institution.specializedConditions.length > 0 && (
-            <View style={styles.tagRow}>
+          <View style={styles.tagRow}>
               {institution.specializedConditions.map((t, index) => (
                 <View key={typeof t === 'string' ? t : (t.id || index)} style={styles.tagBox}>
                   <Text style={styles.tagText}>{typeof t === 'string' ? t : (t.name || t)}</Text>
-                </View>
-              ))}
-            </View>
+              </View>
+            ))}
+          </View>
           )}
 
           {institution.description && (
-            <View style={styles.sectionCard}>
-              <Text style={styles.descriptionText}>
+          <View style={styles.sectionCard}>
+            <Text style={styles.descriptionText}>
                 {institution.description}
-              </Text>
-            </View>
+            </Text>
+          </View>
           )}
 
           {/* 직원 정보 */}

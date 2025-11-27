@@ -2,7 +2,7 @@
 import apiClient from "../axios";
 
 // --------------------------------------------------
-// 1. 기관 목록 조회 (GET /api/v1/institutions/profile)
+// 1. 기관 목록 조회 (GET /api/v1/public/institutions)
 // --------------------------------------------------
 export const getInstitutionList = ({
   page = 0,
@@ -17,7 +17,7 @@ export const getInstitutionList = ({
   longitude,
   radiusKm,
 } = {}) => {
-  return apiClient.get("/institutions/profile", {
+  return apiClient.get("/public/institutions", {
     params: {
       page,
       size,
@@ -58,10 +58,10 @@ export const createInstitution = (file, data) => {
 };
 
 // --------------------------------------------------
-// 3. 기관 상세 조회 (GET /api/v1/institutions/profile/{institutionId})
+// 3. 기관 상세 조회 (GET /api/v1/public/institutions/{institutionId})
 // --------------------------------------------------
 export const getInstitutionDetail = (institutionId) => {
-  return apiClient.get(`/institutions/profile/${institutionId}`);
+  return apiClient.get(`/public/institutions/${institutionId}`);
 };
 
 // --------------------------------------------------

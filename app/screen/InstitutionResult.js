@@ -28,6 +28,7 @@ export default function InstitutionResult() {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [error, setError] = useState(null);
 
   // 기관 유형 한글 변환
   const getInstitutionTypeLabel = (type) => {
@@ -97,6 +98,7 @@ export default function InstitutionResult() {
     if (loading) return;
 
     setLoading(true);
+    setError(null);
     try {
       const currentPage = resetPage ? 0 : page;
       const apiParams = buildApiParams();
@@ -118,7 +120,24 @@ export default function InstitutionResult() {
       }
     } catch (error) {
       console.log("Search error:", error);
-      Alert.alert("오류", "검색 중 오류가 발생했습니다.");
+      console.log("Error response:", error.response?.data);
+      console.log("Error status:", error.response?.status);
+      
+      let errorMessage = "검색 중 오류가 발생했습니다.";
+      
+      if (error.response?.status === 404) {
+        errorMessage = "검색 API를 찾을 수 없습니다.\n서버 설정을 확인해주세요.";
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
+      
+      if (resetPage) {
+        setResults([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -201,10 +220,22 @@ export default function InstitutionResult() {
         }}
         scrollEventThrottle={400}
       >
-        {loading && results.length === 0 ? (
+        {loading && results.length === 0 && !error ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#5DA7DB" />
             <Text style={styles.loadingText}>검색 중...</Text>
+          </View>
+        ) : error ? (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="alert-circle" size={48} color="#FF6B6B" />
+            <Text style={styles.emptyText}>검색 중 오류가 발생했습니다.</Text>
+            <Text style={styles.emptySubtext}>{error}</Text>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={() => fetchResults(true)}
+            >
+              <Text style={styles.retryButtonText}>다시 시도</Text>
+            </TouchableOpacity>
           </View>
         ) : results.length === 0 ? (
           <View style={styles.emptyContainer}>
@@ -338,6 +369,19 @@ const styles = StyleSheet.create({
     color: "#A0A9B2",
     fontSize: 14,
     marginTop: 6,
+    textAlign: "center",
+  },
+  retryButton: {
+    marginTop: 20,
+    backgroundColor: "#5DA7DB",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
   },
   resultCard: {
     backgroundColor: "#FFFFFF",
