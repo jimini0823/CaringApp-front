@@ -13,7 +13,9 @@ export const saveAccessToken = async (token) => {
   try {
     await AsyncStorage.setItem(TOKEN_KEYS.ACCESS_TOKEN, token);
   } catch (e) {
-    console.log("saveAccessToken Error:", e);
+    if (__DEV__) {
+      console.error("saveAccessToken Error:", e);
+    }
   }
 };
 
@@ -24,21 +26,32 @@ export const saveRefreshToken = async (token) => {
   try {
     await AsyncStorage.setItem(TOKEN_KEYS.REFRESH_TOKEN, token);
   } catch (e) {
-    console.log("saveRefreshToken Error:", e);
+    if (__DEV__) {
+      console.error("saveRefreshToken Error:", e);
+    }
   }
 };
 
 /**
  * Access Token과 Refresh Token을 함께 저장
+ * refreshToken이 없는 경우 (OAuth 임시 토큰 등) accessToken만 저장
  */
 export const saveTokens = async (accessToken, refreshToken) => {
   try {
-    await AsyncStorage.multiSet([
-      [TOKEN_KEYS.ACCESS_TOKEN, accessToken],
-      [TOKEN_KEYS.REFRESH_TOKEN, refreshToken],
-    ]);
+    if (refreshToken) {
+      // access_token과 refresh_token 둘 다 저장
+      await AsyncStorage.multiSet([
+        [TOKEN_KEYS.ACCESS_TOKEN, accessToken],
+        [TOKEN_KEYS.REFRESH_TOKEN, refreshToken],
+      ]);
+    } else {
+      // refresh_token이 없는 경우 access_token만 저장
+      await AsyncStorage.setItem(TOKEN_KEYS.ACCESS_TOKEN, accessToken);
+    }
   } catch (e) {
-    console.log("saveTokens Error:", e);
+    if (__DEV__) {
+      console.error("saveTokens Error:", e);
+    }
   }
 };
 
@@ -50,7 +63,9 @@ export const getAccessToken = async () => {
     const token = await AsyncStorage.getItem(TOKEN_KEYS.ACCESS_TOKEN);
     return token || null;
   } catch (e) {
-    console.log("getAccessToken Error:", e);
+    if (__DEV__) {
+      console.error("getAccessToken Error:", e);
+    }
     return null;
   }
 };
@@ -63,7 +78,9 @@ export const getRefreshToken = async () => {
     const token = await AsyncStorage.getItem(TOKEN_KEYS.REFRESH_TOKEN);
     return token || null;
   } catch (e) {
-    console.log("getRefreshToken Error:", e);
+    if (__DEV__) {
+      console.error("getRefreshToken Error:", e);
+    }
     return null;
   }
 };
@@ -78,7 +95,9 @@ export const clearTokens = async () => {
       TOKEN_KEYS.REFRESH_TOKEN,
     ]);
   } catch (e) {
-    console.log("clearTokens Error:", e);
+    if (__DEV__) {
+      console.error("clearTokens Error:", e);
+    }
   }
 };
 
@@ -97,7 +116,9 @@ export const getSignupToken = async () => {
     const state = signupStore.getState();
     return state?.signupData?.accessToken || null;
   } catch (e) {
-    console.log("getSignupToken Error:", e);
+    if (__DEV__) {
+      console.error("getSignupToken Error:", e);
+    }
     return null;
   }
 };

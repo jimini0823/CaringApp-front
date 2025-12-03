@@ -3,20 +3,40 @@ import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import React, { useState } from "react";
 import {
-  Alert,
-  Dimensions,
-  Image,
-  Keyboard,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
+    Alert,
+    Dimensions,
+    Image,
+    Keyboard,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View,
 } from "react-native";
 
 import { loginOAuth2, loginUser } from "../api/auth/auth.api";
+import { useSignup } from "../context/SignupContext";
+import { performOAuthLogin } from "../utils/oauthHelper";
 import { saveTokens } from "../utils/tokenHelper";
+
+// JWT 토큰에서 payload를 디코딩하는 함수
+const decodeJwtPayload = (token) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    console.log("[JWT] 토큰 디코딩 실패:", e);
+    return null;
+  }
+};
 
 // WebBrowser 완료 후 인증 세션 정리
 WebBrowser.maybeCompleteAuthSession();
@@ -27,6 +47,7 @@ export default function Login() {
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
   const [focusedField, setFocusedField] = useState("");
+  const { updateSignup } = useSignup();
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -60,7 +81,9 @@ export default function Login() {
         Alert.alert("로그인 실패", "로그인에 실패했습니다. 다시 시도해주세요.");
       }
     } catch (error) {
-      console.log("Login error:", error);
+      if (__DEV__) {
+        console.error("Login error:", error);
+      }
       const errorMessage =
         error.response?.data?.message ||
         error.message ||
@@ -72,51 +95,86 @@ export default function Login() {
   };
 
   const handleOAuthLogin = async (provider) => {
+    if (isLoading) {
+      Alert.alert("알림", "이미 처리 중입니다. 잠시만 기다려주세요.");
+      return;
+    }
+
     setIsLoading(true);
+    
     try {
-      const state = Math.random().toString(36).substring(7);
-      
-      // 임시: 더미 authorization_code로 로그인 시도
-      // TODO: 실제 OAuth 플로우 구현 필요
-      const dummyAuthorizationCode = `temp_${provider}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-      
-      console.log("Sending OAuth2 login request:", {
-        provider,
-        authorization_code: dummyAuthorizationCode,
+      const { accessToken, state } = await performOAuthLogin(provider);
+
+      if (!accessToken) {
+        throw new Error("access_token을 받지 못했습니다.");
+      }
+
+      const payload = {
+        access_token: accessToken,
         state: state,
-      });
-      
-      try {
-        // 백엔드에 authorization_code 전달 (POST 요청)
-        const response = await loginOAuth2(provider, {
-          authorization_code: dummyAuthorizationCode,
-          state: state,
-        });
+      };
 
-        console.log("OAuth2 login response:", response.data);
+      const response = await loginOAuth2(provider, payload);
+      const { access_token, refresh_token } = response.data.data || response.data;
 
-        const { access_token, refresh_token } = response.data.data || response.data;
+      if (access_token) {
+        const jwtPayload = decodeJwtPayload(access_token);
+        const role = jwtPayload?.role;
+        
+        await saveTokens(access_token, refresh_token);
 
-        if (access_token) {
-          await saveTokens(access_token, refresh_token);
-          router.replace("/screen/Home");
+        if (role === "ROLE_TEMP_OAUTH") {
+          updateSignup({
+            access_token: access_token,
+            oauthProvider: provider,
+            credentialType: jwtPayload?.credential_type,
+            credentialId: jwtPayload?.credential_id,
+          });
+          
+          router.replace("/screen/SelfIdentification");
         } else {
-          // 토큰이 없어도 일단 홈으로 이동 (임시)
-          console.log("No token received, but navigating to home");
           router.replace("/screen/Home");
         }
-      } catch (error) {
-        console.log("OAuth login error:", error);
-        
-        // 에러가 발생해도 일단 홈으로 이동 (임시)
-        // TODO: 실제 OAuth 플로우 구현 후 제거
-        console.log("Error occurred, but navigating to home for testing");
-        router.replace("/screen/Home");
+      } else {
+        Alert.alert(
+          "로그인 실패",
+          "토큰을 받지 못했습니다. 다시 시도해주세요."
+        );
       }
     } catch (error) {
-      console.log("OAuth login error:", error);
-      // 에러가 발생해도 일단 홈으로 이동 (임시)
-      router.replace("/screen/Home");
+      const isTimeoutError = error.code === 'ECONNABORTED' || 
+                            error.message?.includes('timeout') ||
+                            error.message?.includes('exceeded');
+      
+      if (__DEV__) {
+        console.error("[OAuth] 에러 발생:", {
+          type: error.constructor.name,
+          message: error.message,
+          code: error.code,
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          responseData: error.response?.data,
+          url: error.config?.url,
+          method: error.config?.method,
+          isTimeout: isTimeoutError
+        });
+      }
+      
+      let errorMessage;
+      if (isTimeoutError) {
+        errorMessage = "서버 응답 시간이 초과되었습니다.\n백엔드 서버가 응답하지 않거나 처리 시간이 오래 걸리고 있습니다.\n\n다시 시도하거나 잠시 후 시도해주세요.";
+      } else if (error.response?.status === 500) {
+        const serverMessage = error.response?.data?.message;
+        errorMessage = serverMessage || "서버 내부 오류가 발생했습니다.\n잠시 후 다시 시도해주세요.";
+      } else if (error.response?.status) {
+        errorMessage = error.response?.data?.errorMessage ||
+                      error.response?.data?.message ||
+                      `서버 오류가 발생했습니다. (상태 코드: ${error.response.status})`;
+      } else {
+        errorMessage = error.message || "OAuth 로그인에 실패했습니다. 다시 시도해주세요.";
+      }
+      
+      Alert.alert("로그인 실패", errorMessage);
     } finally {
       setIsLoading(false);
     }
