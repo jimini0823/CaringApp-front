@@ -6,8 +6,11 @@ import {
   saveTokens
 } from "../utils/tokenHelper";
 
+// 개발 환경에서 사용할 백엔드 서버 주소
+const DEV_BASE_URL = "http://43.203.41.246:8080/api/v1";
+
 const api = axios.create({
-  baseURL: "http://43.203.41.246:8080/api/v1",
+  baseURL: __DEV__ ? DEV_BASE_URL : "http://43.203.41.246:8080/api/v1",
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
@@ -36,15 +39,45 @@ api.interceptors.request.use(
     const method = config.method?.toUpperCase() || "GET";
     const url = `${config.baseURL || ""}${config.url}`;
     const params = config.params ? JSON.stringify(config.params) : "";
-    const data = config.data ? (typeof config.data === "string" ? config.data.substring(0, 100) : JSON.stringify(config.data).substring(0, 100)) : "";
+    
+    // 데이터 로깅 개선 (authorizationCode 포함)
+    let dataLog = "";
+    if (config.data) {
+      if (typeof config.data === "string") {
+        dataLog = config.data.substring(0, 200);
+      } else {
+        const dataStr = JSON.stringify(config.data);
+        // authorizationCode가 있으면 일부만 보여주고 전체 길이 표시
+        if (dataStr.includes("authorization") || dataStr.includes("authorization_code")) {
+          try {
+            const dataObj = JSON.parse(dataStr);
+            const authCode = dataObj.authorization || dataObj.authorization_code;
+            if (authCode) {
+              dataLog = JSON.stringify({
+                ...dataObj,
+                [dataObj.authorization ? "authorization" : "authorization_code"]: `${authCode.substring(0, 30)}... (길이: ${authCode.length})`,
+              });
+            } else {
+              dataLog = dataStr.substring(0, 200);
+            }
+          } catch {
+            dataLog = dataStr.substring(0, 200);
+          }
+        } else {
+          dataLog = dataStr.substring(0, 200);
+        }
+      }
+    }
 
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log(`📤 [API REQUEST] ${timestamp}`);
-    console.log(`   Method: ${method}`);
-    console.log(`   URL: ${url}`);
-    if (params) console.log(`   Params: ${params}`);
-    if (data) console.log(`   Data: ${data}...`);
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    if (__DEV__) {
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+      console.log(`📤 [API REQUEST] ${timestamp}`);
+      console.log(`   Method: ${method}`);
+      console.log(`   URL: ${url}`);
+      if (params) console.log(`   Params: ${params}`);
+      if (dataLog) console.log(`   Data: ${dataLog}${config.data && typeof config.data === "object" && JSON.stringify(config.data).length > 200 ? "..." : ""}`);
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    }
 
     const noAuthNeeded = [
       "/auth/register",
@@ -81,10 +114,12 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log(`❌ [API REQUEST ERROR] ${new Date().toISOString()}`);
-    console.log(`   Error:`, error.message);
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    if (__DEV__) {
+      console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+      console.error(`❌ [API REQUEST ERROR] ${new Date().toISOString()}`);
+      console.error(`   Error:`, error.message);
+      console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    }
     return Promise.reject(error);
   }
 );
@@ -101,19 +136,21 @@ api.interceptors.response.use(
     const status = response.status;
     const statusText = response.statusText;
 
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log(`✅ [API RESPONSE] ${timestamp}`);
-    console.log(`   Method: ${method}`);
-    console.log(`   URL: ${url}`);
-    console.log(`   Status: ${status} ${statusText}`);
-    console.log(`   Duration: ${duration}`);
-    if (response.data) {
-      const dataPreview = typeof response.data === "string" 
-        ? response.data.substring(0, 150) 
-        : JSON.stringify(response.data).substring(0, 150);
-      console.log(`   Data: ${dataPreview}...`);
+    if (__DEV__) {
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+      console.log(`✅ [API RESPONSE] ${timestamp}`);
+      console.log(`   Method: ${method}`);
+      console.log(`   URL: ${url}`);
+      console.log(`   Status: ${status} ${statusText}`);
+      console.log(`   Duration: ${duration}`);
+      if (response.data) {
+        const dataPreview = typeof response.data === "string" 
+          ? response.data.substring(0, 150) 
+          : JSON.stringify(response.data).substring(0, 150);
+        console.log(`   Data: ${dataPreview}...`);
+      }
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     }
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
     return response;
   },
@@ -128,22 +165,40 @@ api.interceptors.response.use(
     const status = error.response?.status || "N/A";
     const statusText = error.response?.statusText || error.message;
 
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log(`❌ [API ERROR] ${timestamp}`);
-    console.log(`   Method: ${method}`);
-    console.log(`   URL: ${url}`);
-    console.log(`   Status: ${status} ${statusText}`);
-    console.log(`   Duration: ${duration}`);
-    if (error.response?.data) {
-      const errorData = typeof error.response.data === "string"
-        ? error.response.data.substring(0, 150)
-        : JSON.stringify(error.response.data).substring(0, 150);
-      console.log(`   Error Data: ${errorData}...`);
+    if (__DEV__) {
+      console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+      console.error(`❌ [API ERROR] ${timestamp}`);
+      console.error(`   Method: ${method}`);
+      console.error(`   URL: ${url}`);
+      console.error(`   Status: ${status} ${statusText}`);
+      console.error(`   Duration: ${duration}`);
+      
+      if (url?.includes('/auth/oauth2/authorize')) {
+        console.error(`   ⚠️ OAuth authorize 엔드포인트 에러 발생`);
+        console.error(`   요청 Payload:`, error.config?.data);
+      }
+      
+      if (error.response?.data) {
+        const errorData = typeof error.response.data === "string"
+          ? error.response.data
+          : JSON.stringify(error.response.data, null, 2);
+        console.error(`   Error Data: ${errorData}`);
+      }
+      
+      if (error.response) {
+        console.error(`   Response Headers:`, JSON.stringify(error.response.headers, null, 2));
+      }
+      
+      console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     }
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // OAuth authorize 엔드포인트는 인증이 필요 없는 엔드포인트이므로 토큰 refresh 시도하지 않음
+      if (originalRequest.url?.includes('/auth/oauth2/authorize')) {
+        return Promise.reject(error);
+      }
+
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });

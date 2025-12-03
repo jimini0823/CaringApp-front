@@ -41,3 +41,16 @@ app-example
 # generated native folders
 /ios
 /android
+
+# OAuth credentials (민감한 정보)
+*client_secret*.json
+*.plist
+client_*.json
+GoogleService-Info.plist
+
+# Log files
+*.log
+debug.log
+
+# Backend (별도 저장소)
+caring-backend/

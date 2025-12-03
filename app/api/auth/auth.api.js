@@ -77,13 +77,22 @@ export const sendOAuth2CertificationCode = (payload) => {
 };
 
 /* -----------------------------------------------
- * 10. OAuth2 로그인
+ * 10. OAuth2 로그인 (accessToken 전송)
  *     POST /auth/oauth2/login/{provider}
- *     provider는 경로 파라미터로 전달
- *     Request body: { authorization_code, state }
+ *     provider는 경로 파라미터로 전달 (google, kakao, naver)
+ *     Request body: { accessToken: "OAuth access_token", state: "상태값" }
+ *     
+ *     플로우:
+ *     1. 프론트엔드에서 OAuth 인증 후 authorization_code 획득
+ *     2. 프론트엔드에서 authorization_code를 access_token으로 교환
+ *     3. access_token을 백엔드로 전송
+ *     4. 백엔드가 access_token으로 사용자 정보 조회 후 JWT 발급
  * ----------------------------------------------- */
 export const loginOAuth2 = (provider, payload) => {
-  return apiClient.post(`/auth/oauth2/login/${provider}`, payload);
+  // OAuth 로그인은 사용자 정보 조회 과정이 있으므로 타임아웃을 30초로 설정
+  return apiClient.post(`/auth/oauth2/login/${provider}`, payload, {
+    timeout: 30000, // 30초
+  });
 };
 
 /* -----------------------------------------------
@@ -108,15 +117,11 @@ export const verifyOAuth2Phone = (payload) => {
  *     POST /auth/register
  * ----------------------------------------------- */
 export const registerUser = (payload, token) => {
-  // payload = { username, password, gender, address }
-  console.log (token);
   return apiClient.post("/auth/register", payload, {
-    headers : {
+    headers: {
       Authorization: `Bearer ${token}`,
     },
-    
   });
-
 };
 
 /* -----------------------------------------------
